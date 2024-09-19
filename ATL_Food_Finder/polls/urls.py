@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.urls import path
 from . import views
+from .views import map_view
 
 urlpatterns = [
     path('', views.home, name='home'),
     path('search/', views.search_restaurants, name='search_restaurants'),
+    path('map/', map_view, name='map_view'),
 ]
