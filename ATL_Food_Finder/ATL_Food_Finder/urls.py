@@ -19,8 +19,10 @@ from django.urls import include, path
 
 from django.contrib import admin
 from django.urls import include, path
+from polls.views import map_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('polls.urls')),  # Add this to direct the root URL to the polls app
+    path('map/', map_view, name='map_view'),
 ]
