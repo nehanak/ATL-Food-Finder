@@ -1,6 +1,6 @@
 # Create your views here.
-
-from django.shortcuts import render
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
 from .models import Restaurant
 from django.db.models import Q
 
@@ -16,3 +16,6 @@ def search_restaurants(request):
         )
 
     return render(request, 'polls/search_results.html', {'restaurants': restaurants, 'query': query})
+
+def home(request):
+    return redirect('search_restaurants')
