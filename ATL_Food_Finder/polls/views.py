@@ -19,7 +19,7 @@ def search_restaurants(request):
     return render(request, 'polls/search_results.html', {'restaurants': restaurants, 'query': query})
 
 def home(request):
-    return redirect('search_restaurants')
+    return render(request, 'home.html')
 
 def map_view(request):
     query = request.GET.get('q', '')
