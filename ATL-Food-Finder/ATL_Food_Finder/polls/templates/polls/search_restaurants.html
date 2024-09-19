@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Restaurants</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        /* Styles for search bar, autocomplete suggestions, and results */
+        #autocomplete-results {
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: white;
+            position: absolute;
+            z-index: 1000;
+            width: 100%;
+        }
+        .autocomplete-suggestion {
+            padding: 8px;
+            cursor: pointer;
+        }
+        .autocomplete-suggestion:hover {
+            background-color: #f0f0f0;
+        }
+        #search-results {
+            margin-top: 20px;
+        }
+        .search-result {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .filter-section {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Search for Restaurants</h1>
+
+    <!-- Search Bar -->
+    <div style="position: relative;">
+        <input type="text" id="search-bar" placeholder="Search for restaurants..." autocomplete="off">
+        <div id="autocomplete-results" class="autocomplete-suggestions"></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <h3>Filters</h3>
+        <label for="cuisine">Cuisine:</label>
+        <select id="cuisine">
+            <option value="">All</option>
+            <option value="italian">Italian</option>
+            <option value="mexican">Mexican</option>
+            <option value="chinese">Chinese</option>
+        </select>
+
+        <label for="location">Location:</label>
+        <input type="text" id="location" placeholder="Enter location">
+
+        <label for="price_range">Price Range:</label>
+        <select id="price_range">
+            <option value="">Any</option>
+            <option value="1">$</option>
+            <option value="2">$$</option>
+            <option value="3">$$$</option>
+        </select>
+
+        <label for="rating">Rating:</label>
+        <input type="number" id="rating" min="0" max="5" step="0.1" placeholder="Rating (1 to 5)">
+    </div>
+
+    <!-- Button to trigger search -->
+    <button id="search-btn">Search</button>
+
+    <!-- Area to display search results -->
+    <div id="search-results"></div>
+
+    <script>
+        $(document).ready(function() {
+            // Function for autocomplete
+            $('#search-bar').on('input', function() {
+                var query = $(this).val();
+                if (query.length > 2) {  // Trigger autocomplete if input length > 2
+                    $.ajax({
+                        url: '{% url "autocomplete" %}',
+                        type: 'GET',
+                        data: { query: query },
+                        success: function(data) {
+                            $('#autocomplete-results').empty();
+                            data.suggestions.forEach(function(suggestion) {
+                                $('#autocomplete-results').append('<div class="autocomplete-suggestion">' + suggestion + '</div>');
+                            });
+                        }
+                    });
+                } else {
+                    $('#autocomplete-results').empty();
+                }
+            });
+
+            // Handle clicking on autocomplete suggestions
+            $('#autocomplete-results').on('click', '.autocomplete-suggestion', function() {
+                $('#search-bar').val($(this).text());
+                $('#autocomplete-results').empty();
+            });
+
+            // Handle the search button click
+            $('#search-btn').on('click', function() {
+                var query = $('#search-bar').val();
+                var cuisine = $('#cuisine').val();
+                var location = $('#location').val();
+                var price_range = $('#price_range').val();
+                var rating = $('#rating').val();
+
+                $.ajax({
+                    url: '{% url "search_restaurants" %}',
+                    type: 'GET',
+                    data: {
+                        query: query,
+                        cuisine: cuisine,
+                        location: location,
+                        price_range: price_range,
+                        rating: rating
+                    },
+                    success: function(data) {
+                        $('#search-results').empty();
+                        if (data.results.length > 0) {
+                            data.results.forEach(function(restaurant) {
+                                $('#search-results').append(
+                                    '<div class="search-result">' +
+                                    '<h3>' + restaurant.name + '</h3>' +
+                                    '<p>Cuisine: ' + restaurant.cuisine_type + '</p>' +
+                                    '<p>Address: ' + restaurant.address + '</p>' +
+                                    '<p>Rating: ' + restaurant.rating + '</p>' +
+                                    '<p>Price: ' + restaurant.price_range + '</p>' +
+                                    '</div>'
+                                );
+                            });
+                        } else {
+                            $('#search-results').append('<p>No results found.</p>');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
