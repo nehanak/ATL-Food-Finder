@@ -3,173 +3,391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlanta Food Finder</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'styles/styles.css' %}">
+    <title>Restaurant Finder</title>
+
+    <!-- Google Maps API with your API Key -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCoWkWdBmq8tvavjvyfFYhtNa3Y6mqCaO8&libraries=places&callback=initMap"></script>
+
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4; /* Light background color */
-        }
-        header {
-            background-color: #4CAF50; /* Header background color */
-            color: white;
-            padding: 10px 0;
-            text-align: center;
-        }
-        #map {
-            height: 80vh; /* Adjust as needed */
-            width: 100%;
-            border-top: 2px solid #4CAF50; /* Border color */
-        }
-        .search-bar {
-            padding: 10px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin: 10px;
-            position: relative;
-            z-index: 10; /* Ensure it’s above the map */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
-        }
-        .search-results {
-            padding: 10px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin: 10px;
-            position: relative;
-            z-index: 10;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
-        }
-        .search-results ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .search-results li {
-            margin-bottom: 10px;
-        }
-        .more-info-btn {
-            display: inline-block;
-            padding: 10px 20px;
-            margin-top: 10px;
-            background-color: #4CAF50; /* Button background color */
-            color: white;
-            text-decoration: none;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 2px solid transparent;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-        .more-info-btn:hover {
-            background-color: white;
-            color: #4CAF50;
-            border-color: #4CAF50;
-        }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Global Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    padding: 20px 0;
+    color: white;
+    margin-top: 0;
+    background-color: #2c3e50;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+#map {
+    height: 700px; /* Increased height for a larger map */
+    width: 100%;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-width: 100%; /* Make container full width */
+    margin: 0 auto;
+    padding: 0 20px; /* Less padding to minimize white space */
+}
+
+/* Search Bar Styling */
+.search-bar {
+    background-color: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.search-bar form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) 1fr;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.search-bar label {
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.search-bar select,
+.search-bar input {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+}
+
+.search-bar button {
+    padding: 10px;
+    font-size: 1.2rem;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+.search-bar button:hover {
+    background-color: #2980b9;
+}
+
+/* Restaurant and Map container layout */
+.results-map-container {
+    display: flex;
+    width: 100%; /* Full width of the screen */
+    justify-content: space-between;
+    gap: 20px; /* Ensure space between map and restaurant list */
+}
+
+/* Map Styling */
+#map {
+    flex-grow: 1;
+    height: 700px; /* Increased height for a larger map */
+    width: 100%; /* Use full available width */
+}
+
+/* Restaurant List Styling */
+#restaurant-list {
+    width: 300px; /* Fixed width for the restaurant list */
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    height: 700px; /* Match height with the map */
+}
+
+#restaurant-list h2 {
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    color: #2c3e50;
+}
+
+.restaurant-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+.restaurant-item h3 {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+.restaurant-item p {
+    margin: 2px 0;
+}
+
+.restaurant-item:last-child {
+    border-bottom: none;
+}
+
+/* Media Queries for Mobile */
+@media (max-width: 768px) {
+    .search-bar form {
+        grid-template-columns: 1fr;
+    }
+
+    .results-map-container {
+        flex-direction: column;
+    }
+
+    #map {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    #restaurant-list {
+        width: 100%;
+    }
+}
+
     </style>
 </head>
 <body>
-    <header>
-        <h1>Atlanta Food Finder</h1>
-    </header>
 
-    <main>
-        <!-- Search Form -->
+    <h1>Find Restaurants Nearby</h1>
+
+    <div class="container">
+        <!-- Search Bar -->
         <div class="search-bar">
-            <form method="GET" action="{% url 'map_view' %}">
-                <input type="text" name="q" placeholder="Search by name, cuisine, or address" value="{{ query }}" style="width: 80%;">
+            <form id="restaurant-search-form">
+                <div>
+                    <label for="cuisine">Cuisine: </label>
+                    <select name="cuisine" id="cuisine">
+                        <option value="">Any</option>
+                        <option value="italian">Italian</option>
+                        <option value="chinese">Chinese</option>
+                        <option value="indian">Indian</option>
+                        <option value="mexican">Mexican</option>
+                        <option value="japanese">Japanese</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="rating">Rating: </label>
+                    <select name="rating" id="rating">
+                        <option value="">Any</option>
+                        <option value="4">4+</option>
+                        <option value="3">3+</option>
+                        <option value="2">2+</option>
+                        <option value="1">1+</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="price">Price Level: </label>
+                    <select name="price" id="price">
+                        <option value="">Any</option>
+                        <option value="1">$</option>
+                        <option value="2">$$</option>
+                        <option value="3">$$$</option>
+                        <option value="4">$$$$</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="distance">Distance (miles): </label>
+                    <input type="number" name="distance" id="distance" value="5">
+                </div>
+
                 <button type="submit">Search</button>
             </form>
         </div>
 
-        <!-- Displaying Search Results -->
-        <div class="search-results">
-            <h2>Search Results</h2>
-            {% if restaurants %}
-                <ul>
-                    {% for restaurant in restaurants %}
-                        <li>
-                            <strong>{{ restaurant.name }}</strong> - {{ restaurant.cuisine_type }} <br>
-                            {{ restaurant.address }} <br>
-                            Rating: {{ restaurant.rating }} <br>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No restaurants found.</p>
-            {% endif %}
+        <!-- Results and Map Container -->
+        <div class="results-map-container">
+            <!-- Map -->
+            <div id="map"></div>
+
+            <!-- Restaurant List -->
+            <div id="restaurant-list">
+                <h2>Restaurants</h2>
+                <!-- Restaurant items will be dynamically added here -->
+            </div>
         </div>
-
-        <div id="map"></div>
-    </main>
-
-    <footer>
-        <p>&copy; 2024 Atlanta Food Finder</p>
-    </footer>
+    </div>
 
     <script>
         let map;
         let service;
         let infoWindow;
+        let markers = [];
 
         function initMap() {
             const atlanta = { lat: 33.7490, lng: -84.3880 };
+
             map = new google.maps.Map(document.getElementById("map"), {
                 center: atlanta,
                 zoom: 13,
             });
 
             infoWindow = new google.maps.InfoWindow();
-
             service = new google.maps.places.PlacesService(map);
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        map.setCenter(userLocation);
+                    },
+                    () => {
+                        map.setCenter(atlanta);
+                    }
+                );
+            } else {
+                map.setCenter(atlanta);
+            }
+
+            const form = document.getElementById('restaurant-search-form');
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const location = map.getCenter();
+                searchRestaurants(location);
+            });
+        }
+
+        function searchRestaurants(location) {
+            const cuisine = document.querySelector('#cuisine').value;
+            const rating = document.querySelector('#rating').value;
+            const price = document.querySelector('#price').value;
+            const distance = document.querySelector('#distance').value;
+
             const request = {
-                location: atlanta,
-                radius: '16093',
+                location: location,
+                radius: distance * 1609.34,
                 type: ['restaurant'],
+                ...(cuisine && { keyword: cuisine })
             };
 
             service.nearbySearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
-                    results.forEach(place => {
-                        const marker = new google.maps.Marker({
-                            position: place.geometry.location,
-                            map: map,
-                            title: place.name,
-                        });
+                    clearMarkers();
+                    clearRestaurantList();
 
-                        google.maps.event.addListener(marker, 'click', () => {
-                            const detailsRequest = {
-                                placeId: place.place_id,
-                                fields: ['name', 'formatted_address', 'opening_hours', 'geometry', 'photos', 'rating', 'website']
-                            };
+                    const filteredResults = results.filter(place => {
+                        let match = true;
 
-                            service.getDetails(detailsRequest, (placeDetails, status) => {
-                                if (status === google.maps.places.PlacesServiceStatus.OK) {
-                                    const content = `
-                                        <h3>${placeDetails.name}</h3>
-                                        <p><strong>Address:</strong> ${placeDetails.formatted_address}</p>
-                                        <p><strong>Rating:</strong> ${placeDetails.rating || 'N/A'}</p>
-                                        <p><strong>Open Now:</strong> ${placeDetails.opening_hours ? placeDetails.opening_hours.open_now ? 'Yes' : 'No' : 'N/A'}</p>
-                                        <p><strong>Website:</strong> <a href="${placeDetails.website}" target="_blank">${placeDetails.website || 'N/A'}</a></p>
-                                        ${placeDetails.photos ? `<img src="${placeDetails.photos[0].getUrl()}" alt="${placeDetails.name}" style="width:100%; max-height:200px; object-fit:cover;">` : ''}
-                                        <a href="restaurant-details.html?placeId=${place.place_id}" class="more-info-btn" target="_blank">More Info</a>
-                                    `;
-                                    infoWindow.setContent(content);
-                                    infoWindow.open(map, marker);
-                                }
-                            });
-                        });
+                        if (rating) {
+                            match = match && (place.rating >= parseFloat(rating));
+                        }
+
+                        if (price) {
+                            match = match && (place.price_level === parseInt(price));
+                        }
+
+                        return match;
                     });
+
+                    for (let i = 0; i < filteredResults.length; i++) {
+                        const marker = createMarker(filteredResults[i]);
+                        addRestaurantToList(filteredResults[i], marker);
+                    }
                 }
             });
         }
-    </script>
 
-    <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCoWkWdBmq8tvavjvyfFYhtNa3Y6mqCaO8&libraries=places&callback=initMap"
-        async
-        defer>
+        function createMarker(place) {
+            const marker = new google.maps.Marker({
+                map: map,
+                position: place.geometry.location,
+            });
+
+            google.maps.event.addListener(marker, 'click', () => {
+                const detailsRequest = {
+                    placeId: place.place_id,
+                    fields: ['name', 'formatted_address', 'international_phone_number', 'formatted_phone_number', 'opening_hours', 'photos', 'rating', 'reviews', 'website', 'types']
+                };
+
+                const service = new google.maps.places.PlacesService(map);
+                service.getDetails(detailsRequest, (placeDetails, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+                        const cuisineTypes = placeDetails.types.find(type => type.includes('_restaurant')) || placeDetails.types[0];
+
+                        const content = `
+                            <div style="max-width: 300px; overflow-wrap: break-word;">
+                                ${placeDetails.photos ? `<img src="${placeDetails.photos[0].getUrl()}" alt="${placeDetails.name}" style="width: 100%; max-height: 200px; object-fit: cover;">` : ''}
+                                <h3>${placeDetails.name}</h3>
+                                <p><strong>Address:</strong> ${placeDetails.formatted_address}</p>
+                                <p><strong>Phone:</strong> ${placeDetails.international_phone_number || placeDetails.formatted_phone_number || 'N/A'}</p>
+                                <p><strong>Rating:</strong> ${placeDetails.rating || 'N/A'} ⭐</p>
+                                <p><strong>Cuisine Type:</strong> ${cuisineTypes}</p>
+                                <p><strong>Website:</strong> <a href="${placeDetails.website}" target="_blank">${placeDetails.website || 'N/A'}</a></p>
+                            </div>
+                        `;
+
+                        infoWindow.setContent(content);
+                        infoWindow.open(map, marker);
+
+                        map.panTo(marker.getPosition());
+                    }
+                });
+            });
+
+            markers.push(marker);
+            return marker;
+        }
+
+        function addRestaurantToList(place, marker) {
+            const list = document.getElementById('restaurant-list');
+
+            const item = document.createElement('div');
+            item.classList.add('restaurant-item');
+
+            item.innerHTML = `
+                <h3>${place.name}</h3>
+                <p>Address: ${place.vicinity}</p>
+                <p>Rating: ${place.rating || 'N/A'} ⭐</p>
+                <p>Price Level: ${'$'.repeat(place.price_level || 0)}</p>
+            `;
+
+            item.addEventListener('click', () => {
+                google.maps.event.trigger(marker, 'click');
+            });
+
+            list.appendChild(item);
+        }
+
+        function clearMarkers() {
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+        }
+
+        function clearRestaurantList() {
+            const list = document.getElementById('restaurant-list');
+            list.innerHTML = '<h2>Restaurants</h2>';
+        }
     </script>
 </body>
 </html>
