@@ -335,6 +335,11 @@ h1 {
                     if (status === google.maps.places.PlacesServiceStatus.OK) {
                         const cuisineTypes = placeDetails.types.find(type => type.includes('_restaurant')) || placeDetails.types[0];
 
+                        // Reviews content to be toggled
+                        const reviewsContent = placeDetails.reviews ? placeDetails.reviews.slice(0, 3).map(review => `
+                            <li><strong>${review.author_name}</strong>: ${review.text} <em>(Rating: ${review.rating})</em></li>
+                        `).join('') : '<li>No reviews available.</li>';
+
                         const content = `
                             <div style="max-width: 300px; overflow-wrap: break-word;">
                                 ${placeDetails.photos ? `<img src="${placeDetails.photos[0].getUrl()}" alt="${placeDetails.name}" style="width: 100%; max-height: 200px; object-fit: cover;">` : ''}
@@ -344,11 +349,39 @@ h1 {
                                 <p><strong>Rating:</strong> ${placeDetails.rating || 'N/A'} ⭐</p>
                                 <p><strong>Cuisine Type:</strong> ${cuisineTypes}</p>
                                 <p><strong>Website:</strong> <a href="${placeDetails.website}" target="_blank">${placeDetails.website || 'N/A'}</a></p>
+                                <button id="toggle-reviews-btn" style="background-color: #007BFF; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">View Reviews</button>
+                                <ul id="reviews-list" style="display: none; margin-top: 10px;">
+                                    ${reviewsContent}
+                                </ul>
                             </div>
                         `;
 
                         infoWindow.setContent(content);
                         infoWindow.open(map, marker);
+
+                        // Wait for the DOM to be fully rendered before adding event listeners
+                        google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
+                            const toggleReviewsBtn = document.getElementById('toggle-reviews-btn');
+                            const reviewsList = document.getElementById('reviews-list');
+
+                            toggleReviewsBtn.addEventListener('mouseover', () => {
+                                toggleReviewsBtn.style.backgroundColor = '#0056b3'; // Darker blue on hover
+                            });
+
+                            toggleReviewsBtn.addEventListener('mouseout', () => {
+                                toggleReviewsBtn.style.backgroundColor = '#007BFF'; // Original blue color
+                            });
+
+                            toggleReviewsBtn.addEventListener('click', () => {
+                                if (reviewsList.style.display === 'none') {
+                                    reviewsList.style.display = 'block';
+                                    toggleReviewsBtn.textContent = 'Hide Reviews';
+                                } else {
+                                    reviewsList.style.display = 'none';
+                                    toggleReviewsBtn.textContent = 'View Reviews';
+                                }
+                            });
+                        });
 
                         map.panTo(marker.getPosition());
                     }
@@ -358,7 +391,6 @@ h1 {
             markers.push(marker);
             return marker;
         }
-
         function addRestaurantToList(place, marker) {
             const list = document.getElementById('restaurant-list');
 
