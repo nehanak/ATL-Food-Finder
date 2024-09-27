@@ -6,8 +6,7 @@
     <title>Restaurant Finder</title>
 
     <!-- Google Maps API with your API Key -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCoWkWdBmq8tvavjvyfFYhtNa3Y6mqCaO8&libraries=places&callback=initMap"></script>
-
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCoWkWdBmq8tvavjvyfFYhtNa3Y6mqCaO8&libraries=places,geometry&callback=initMap" ></script>
     <style>
 * {
     margin: 0;
@@ -149,6 +148,10 @@ h1 {
 .restaurant-item:last-child {
     border-bottom: none;
 }
+.restaurant-item p {
+    margin: 5px 0;
+}
+
 
 /* Media Queries for Mobile */
 @media (max-width: 768px) {
@@ -282,11 +285,13 @@ h1 {
             const cuisine = document.querySelector('#cuisine').value;
             const rating = document.querySelector('#rating').value;
             const price = document.querySelector('#price').value;
-            const distance = document.querySelector('#distance').value;
+            const distance = parseFloat(document.querySelector('#distance').value);
+
+            const restaurantList = document.getElementById('restaurant-list');
 
             const request = {
                 location: location,
-                radius: distance * 1609.34,
+                radius: Math.min(distance * 1609.34, 50000), // Use input distance, but cap at 50km (API limit)
                 type: ['restaurant'],
                 ...(cuisine && { keyword: cuisine })
             };
@@ -299,24 +304,41 @@ h1 {
                     const filteredResults = results.filter(place => {
                         let match = true;
 
-                        if (rating) {
+                        // Calculate actual distance
+                        const placeLocation = place.geometry.location;
+                        const actualDistance = google.maps.geometry.spherical.computeDistanceBetween(location, placeLocation) / 1609.34; // Convert meters to miles
+
+                        // Check if within specified distance
+                        if (actualDistance > distance) {
+                            return false;
+                        }
+
+                        if (rating && place.rating !== undefined) {
                             match = match && (place.rating >= parseFloat(rating));
                         }
 
-                        if (price) {
-                            match = match && (place.price_level === parseInt(price));
+                        if (price && place.price_level !== undefined) {
+                            match = match && (place.price_level <= parseInt(price));
                         }
 
                         return match;
                     });
 
-                    for (let i = 0; i < filteredResults.length; i++) {
-                        const marker = createMarker(filteredResults[i]);
-                        addRestaurantToList(filteredResults[i], marker);
+                    if (filteredResults.length === 0) {
+                        restaurantList.innerHTML = '<h2>Restaurants</h2><p class="message">No restaurants found matching your criteria. Try adjusting your filters.</p>';
+                    } else {
+                        restaurantList.innerHTML = '<h2>Restaurants</h2>';
+                        filteredResults.forEach(place => {
+                            const marker = createMarker(place);
+                            addRestaurantToList(place, marker);
+                        });
                     }
+                } else {
+                    restaurantList.innerHTML = '<h2>Restaurants</h2><p class="message">Error searching for restaurants. Please try again.</p>';
                 }
             });
         }
+
 
         function createMarker(place) {
             const marker = new google.maps.Marker({
@@ -391,23 +413,42 @@ h1 {
             markers.push(marker);
             return marker;
         }
+
         function addRestaurantToList(place, marker) {
             const list = document.getElementById('restaurant-list');
-
             const item = document.createElement('div');
             item.classList.add('restaurant-item');
 
-            item.innerHTML = `
-                <h3>${place.name}</h3>
+            const placeLocation = place.geometry.location;
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(map.getCenter(), placeLocation) / 1609.34; // Convert meters to miles
+
+            const restaurantName = document.createElement('h3');
+            restaurantName.textContent = place.name;
+            restaurantName.style.cursor = 'pointer';
+            restaurantName.style.color = '#3498db';
+            restaurantName.addEventListener('click', () => {
+                google.maps.event.trigger(marker, 'click');
+                map.panTo(marker.getPosition());
+            });
+
+            restaurantName.addEventListener('mouseover', () => {
+                restaurantName.style.textDecoration = 'underline';
+            });
+            restaurantName.addEventListener('mouseout', () => {
+                restaurantName.style.textDecoration = 'none';
+            });
+
+            item.appendChild(restaurantName);
+
+            const details = document.createElement('div');
+            details.innerHTML = `
                 <p>Address: ${place.vicinity}</p>
                 <p>Rating: ${place.rating || 'N/A'} ⭐</p>
                 <p>Price Level: ${'$'.repeat(place.price_level || 0)}</p>
+                <p>Distance: ${distance.toFixed(2)} miles</p>
             `;
 
-            item.addEventListener('click', () => {
-                google.maps.event.trigger(marker, 'click');
-            });
-
+            item.appendChild(details);
             list.appendChild(item);
         }
 
@@ -418,7 +459,7 @@ h1 {
 
         function clearRestaurantList() {
             const list = document.getElementById('restaurant-list');
-            list.innerHTML = '<h2>Restaurants</h2>';
+            list.innerHTML = '<h2>Restaurants</h2><p class="message info">Please apply at least one filter to search for restaurants.</p>';
         }
     </script>
 </body>
