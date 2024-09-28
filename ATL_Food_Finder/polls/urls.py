@@ -22,4 +22,8 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('search/', views.search_restaurants, name='search_restaurants'),
     path('map/', map_view, name='map_view'),
+    path('favorites/', views.favorites_list, name='favorites_list'),  # Add this line
+    path('add_to_favorites/<int:restaurant_id>/', views.add_to_favorites, name='add_to_favorites'),
+    path('remove_from_favorites/<int:restaurant_id>/', views.remove_from_favorites, name='remove_from_favorites'),  # New path
+
 ]

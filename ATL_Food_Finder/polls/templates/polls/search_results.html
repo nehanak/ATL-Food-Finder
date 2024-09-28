@@ -175,8 +175,11 @@ h1 {
 <body>
 
     <h1>Find Restaurants Nearby</h1>
-
+    
+    
     <div class="container">
+        
+        
         <!-- Search Bar -->
         <div class="search-bar">
             <form id="restaurant-search-form">
@@ -191,7 +194,7 @@ h1 {
                         <option value="japanese">Japanese</option>
                     </select>
                 </div>
-
+            
                 <div>
                     <label for="rating">Rating: </label>
                     <select name="rating" id="rating">
@@ -222,7 +225,9 @@ h1 {
                 <button type="submit">Search</button>
             </form>
         </div>
-
+        <button onclick="location.href='{% url 'favorites_list' %}'" style="padding: 10px; font-size: 1.2rem; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 20px;">
+            View Favorites
+        </button>
         <!-- Results and Map Container -->
         <div class="results-map-container">
             <!-- Map -->
@@ -232,15 +237,100 @@ h1 {
             <div id="restaurant-list">
                 <h2>Restaurants</h2>
                 <!-- Restaurant items will be dynamically added here -->
+                    <!--new from here to right after endfor!-->
+                {% for restaurant in restaurants %}
+                    <div class="restaurant-item">
+                        <h3>{{ restaurant.name }}</h3>
+                        <p>Address: {{ restaurant.address }}</p>
+                        <p>Rating: {{ restaurant.rating|default:"N/A" }} ⭐</p>
+                        <p>Price Level: {{ restaurant.price_level }}</p>
+                        {% if restaurant.id in favorite_ids %}
+                            <button onclick="removeFromFavorites({{ restaurant.id }})">Remove from Favorites</button>
+                        {% else %}
+                            <button onclick="addToFavorites({{ restaurant.id }})">Add to Favorites</button>
+                        {% endif %}
+                    </div>
+                {% endfor %}
             </div>
         </div>
+    
+            <!-- Add the Favorites List here -->
+        <div id="favorites-list">
+            <h2>Your Favorite Restaurants</h2>
+            {% if favorites %}
+                <ul>
+                    {% for favorite in favorites %}
+                        <li>
+                            {{ favorite.name }} - {{ favorite.address }}
+                            <form action="{% url 'remove_from_favorites' favorite.id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit">Remove</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No favorites added yet.</p>
+            {% endif %}
+        </div>
+
+    <button onclick="location.href='{% url 'favorites_list' %}'" style="padding: 10px; font-size: 1.2rem; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 20px;">
+        View All Favorites
+    </button>
     </div>
+    
+    
 
     <script>
         let map;
         let service;
         let infoWindow;
         let markers = [];
+        
+        function addToFavorites(restaurantId) {
+            fetch(`/add_to_favorites/${restaurantId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken') // Ensure CSRF token is sent
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload(); // Reload to update the favorites list
+                }
+            });
+        }
+
+        function removeFromFavorites(restaurantId) {
+            fetch(`/remove_from_favorites/${restaurantId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken') // Ensure CSRF token is sent
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload(); // Reload to update the favorites list
+                }
+            });
+        }
+
+        // Helper function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
 
         function initMap() {
             const atlanta = { lat: 33.7490, lng: -84.3880 };
@@ -396,12 +486,21 @@ h1 {
 
             const item = document.createElement('div');
             item.classList.add('restaurant-item');
+            
+            // Create the "Add to Favorites" button
+            const addToFavoritesButton = `<button onclick="addToFavorites(${place.place_id})" style="background-color: #e67e22; color: white; padding: 5px; border: none; border-radius: 5px; cursor: pointer;">Add to Favorites</button>`;
+            
+            // Create the "Remove from Favorites" button
+            const removeFromFavoritesButton = `<button onclick="removeFromFavorites(${place.place_id})" style="background-color: #c0392b; color: white; padding: 5px; border: none; border-radius: 5px; cursor: pointer;">Remove from Favorites</button>`;
 
+            
             item.innerHTML = `
                 <h3>${place.name}</h3>
                 <p>Address: ${place.vicinity}</p>
                 <p>Rating: ${place.rating || 'N/A'} ⭐</p>
                 <p>Price Level: ${'$'.repeat(place.price_level || 0)}</p>
+                ${addToFavoritesButton}  <!-- Button to add to favorites -->
+                ${removeFromFavoritesButton}  <!-- Button to remove from favorites -->
             `;
 
             item.addEventListener('click', () => {

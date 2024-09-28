@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<h1>Your Favorite Restaurants</h1>
+
+{% if favorites %}
+    <ul>
+        {% for favorite in favorites %}
+            <li>
+                {{ favorite.name }} - {{ favorite.address }}
+                <form action="{% url 'remove_from_favorites' favorite.id %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit">Remove</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No favorites added yet.</p>
+{% endif %}
+
+<a href="{% url 'search_restaurants' %}">Back to Search</a>
+
+
