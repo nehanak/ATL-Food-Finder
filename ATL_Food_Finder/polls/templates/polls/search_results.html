@@ -354,7 +354,7 @@ h1 {
             });
         }
 
-function createMarker(place) {
+        function createMarker(place) {
     const marker = new google.maps.Marker({
         map: map,
         position: place.geometry.location,
@@ -381,6 +381,9 @@ function createMarker(place) {
                     <li><strong>${review.author_name}</strong>: ${review.text} <em>(Rating: ${review.rating})</em></li>
                 `).join('') : '<li>No reviews available.</li>';
 
+                // Get Directions URL for Google Maps
+                const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(placeDetails.formatted_address)}`;
+
                 const content = `
                     <div style="max-width: 300px; overflow-wrap: break-word;">
                         ${placeDetails.photos ? `<img src="${placeDetails.photos[0].getUrl()}" alt="${placeDetails.name}" style="width: 100%; max-height: 200px; object-fit: cover;">` : ''}
@@ -388,12 +391,14 @@ function createMarker(place) {
                         <p><strong>Address:</strong> ${placeDetails.formatted_address}</p>
                         <p><strong>Phone:</strong> ${placeDetails.international_phone_number || placeDetails.formatted_phone_number || 'N/A'}</p>
                         <p><strong>Cuisine Type:</strong> ${formattedCuisine}</p>
-                        <p><strong>Website:</strong> ${placeDetails.website ? `<a href="${placeDetails.website}"
-                        target="_blank">${placeDetails.website}</a>` : 'Website Not Found'}</p>
+                        <p><strong>Website:</strong> ${placeDetails.website ? `<a href="${placeDetails.website}" target="_blank">${placeDetails.website}</a>` : 'Website Not Found'}</p>
                         <button id="toggle-reviews-btn" style="background-color: #007BFF; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">View Reviews</button>
                         <ul id="reviews-list" style="display: none; margin-top: 10px;">
                             ${reviewsContent}
                         </ul>
+                        <button id="get-directions-btn" style="background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                            Get Directions
+                        </button>
                     </div>
                 `;
 
@@ -403,7 +408,9 @@ function createMarker(place) {
                 google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
                     const toggleReviewsBtn = document.getElementById('toggle-reviews-btn');
                     const reviewsList = document.getElementById('reviews-list');
+                    const getDirectionsBtn = document.getElementById('get-directions-btn');
 
+                    // Hover effect for reviews button
                     toggleReviewsBtn.addEventListener('mouseover', () => {
                         toggleReviewsBtn.style.backgroundColor = '#0056b3';
                     });
@@ -412,6 +419,7 @@ function createMarker(place) {
                         toggleReviewsBtn.style.backgroundColor = '#007BFF';
                     });
 
+                    // Toggle reviews display
                     toggleReviewsBtn.addEventListener('click', () => {
                         if (reviewsList.style.display === 'none') {
                             reviewsList.style.display = 'block';
@@ -420,6 +428,20 @@ function createMarker(place) {
                             reviewsList.style.display = 'none';
                             toggleReviewsBtn.textContent = 'View Reviews';
                         }
+                    });
+
+                    // Hover effect for directions button
+                    getDirectionsBtn.addEventListener('mouseover', () => {
+                        getDirectionsBtn.style.backgroundColor = '#218838';
+                    });
+
+                    getDirectionsBtn.addEventListener('mouseout', () => {
+                        getDirectionsBtn.style.backgroundColor = '#28a745';
+                    });
+
+                    // Redirect to Google Maps for directions on button click
+                    getDirectionsBtn.addEventListener('click', () => {
+                        window.open(directionsUrl, '_blank');
                     });
                 });
 
