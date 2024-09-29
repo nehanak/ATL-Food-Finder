@@ -291,12 +291,12 @@ h1 {
             fetch(`/add_to_favorites/${restaurantId}/`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': getCookie('csrftoken') // Ensure CSRF token is sent
+                    'X-CSRFToken': getCookie('csrftoken')
                 }
             })
             .then(response => {
                 if (response.ok) {
-                    location.reload(); // Reload to update the favorites list
+                    location.reload();
                 }
             });
         }
@@ -440,8 +440,10 @@ h1 {
                                 <p><strong>Cuisine Type:</strong> ${cuisineTypes}</p>
                                 <p><strong>Website:</strong> <a href="${placeDetails.website}" target="_blank">${placeDetails.website || 'N/A'}</a></p>
                                 <button id="toggle-reviews-btn" style="background-color: #007BFF; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">View Reviews</button>
+                                <button onclick="redirectToFavorites()" style="background-color: #e67e22; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Add to Favorites</button>
+
                                 <ul id="reviews-list" style="display: none; margin-top: 10px;">
-                                    ${reviewsContent}
+                                                                    ${reviewsContent}
                                 </ul>
                             </div>
                         `;
@@ -486,21 +488,12 @@ h1 {
 
             const item = document.createElement('div');
             item.classList.add('restaurant-item');
-            
-            // Create the "Add to Favorites" button
-            const addToFavoritesButton = `<button onclick="addToFavorites(${place.place_id})" style="background-color: #e67e22; color: white; padding: 5px; border: none; border-radius: 5px; cursor: pointer;">Add to Favorites</button>`;
-            
-            // Create the "Remove from Favorites" button
-            const removeFromFavoritesButton = `<button onclick="removeFromFavorites(${place.place_id})" style="background-color: #c0392b; color: white; padding: 5px; border: none; border-radius: 5px; cursor: pointer;">Remove from Favorites</button>`;
 
-            
             item.innerHTML = `
                 <h3>${place.name}</h3>
                 <p>Address: ${place.vicinity}</p>
                 <p>Rating: ${place.rating || 'N/A'} ⭐</p>
                 <p>Price Level: ${'$'.repeat(place.price_level || 0)}</p>
-                ${addToFavoritesButton}  <!-- Button to add to favorites -->
-                ${removeFromFavoritesButton}  <!-- Button to remove from favorites -->
             `;
 
             item.addEventListener('click', () => {
@@ -509,6 +502,11 @@ h1 {
 
             list.appendChild(item);
         }
+
+        function redirectToFavorites() {
+            window.location.href = "{% url 'favorites_list' %}";
+        }
+
 
         function clearMarkers() {
             markers.forEach(marker => marker.setMap(null));
