@@ -170,9 +170,14 @@ h1 {
 
     <h1>Find Restaurants Nearby</h1>
 
-    <div class="container">
-        <div class="search-bar">
+<div class="container">
+    <div class="search-bar">
         <form id="restaurant-search-form">
+            <div>
+                <label for="name">Restaurant Name: </label>
+                <input type="text" name="name" id="name" placeholder="Enter restaurant name">
+            </div>
+
             <div>
                 <label for="cuisine">Cuisine: </label>
                 <select name="cuisine" id="cuisine">
@@ -218,36 +223,40 @@ h1 {
                     <option value="vietnamese_restaurant">Vietnamese</option>
                 </select>
             </div>
-                <div>
-                    <label for="rating">Rating: </label>
-                    <select name="rating" id="rating">
-                        <option value="">Any</option>
-                        <option value="4">4+</option>
-                        <option value="3">3+</option>
-                        <option value="2">2+</option>
-                        <option value="1">1+</option>
-                    </select>
-                </div>
 
-                <div>
-                    <label for="price">Price Level: </label>
-                    <select name="price" id="price">
-                        <option value="">Any</option>
-                        <option value="1">$</option>
-                        <option value="2">$$</option>
-                        <option value="3">$$$</option>
-                        <option value="4">$$$$</option>
-                    </select>
-                </div>
+            <div>
+                <label for="rating">Rating: </label>
+                <select name="rating" id="rating">
+                    <option value="">Any</option>
+                    <option value="4">4+</option>
+                    <option value="3">3+</option>
+                    <option value="2">2+</option>
+                    <option value="1">1+</option>
+                </select>
+            </div>
 
-                <div>
-                    <label for="distance">Distance (miles): </label>
-                    <input type="number" name="distance" id="distance" value="5">
-                </div>
+            <div>
+                <label for="price">Price Level: </label>
+                <select name="price" id="price">
+                    <option value="">Any</option>
+                    <option value="1">$</option>
+                    <option value="2">$$</option>
+                    <option value="3">$$$</option>
+                    <option value="4">$$$$</option>
+                </select>
+            </div>
 
-                <button type="submit">Search</button>
-            </form>
-        </div>
+            <div>
+                <label for="distance">Distance (miles): </label>
+                <input type="number" name="distance" id="distance" placeholder="Enter distance" min="1">
+            </div>
+
+
+            <button type="submit">Search</button>
+        </form>
+    </div>
+</div>
+
 
         <div class="results-map-container">
             <div id="map"></div>
@@ -301,15 +310,18 @@ h1 {
         }
 
         function searchRestaurants(location) {
+            const name = document.getElementById('name').value;
             const cuisine = document.getElementById('cuisine').value;
             const rating = document.querySelector('#rating').value;
             const price = document.querySelector('#price').value;
-            const distance = document.querySelector('#distance').value;
+            const distanceInput = document.querySelector('#distance').value;
+            const distance = distanceInput ? distanceInput * 1609.34 : null;
 
             const request = {
                 location: location,
-                radius: distance * 1609.34,
+                radius: distance || 50000,
                 type: ['restaurant'],
+                ...(name && { name: name }),
                 ...(cuisine && { keyword: cuisine })
             };
 
