@@ -1,0 +1,63 @@
+/* Global reset for a clean slate */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(to right, #f0f4f8, #d9e4ec); /* Soft gradient background */
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Home container styling */
+.home-container {
+    background-color: #ffffff;
+    padding: 60px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for a professional look */
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.home-container:hover {
+    transform: scale(1.02); /* Slight zoom effect on hover */
+}
+
+/* Heading styling */
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #007bff;
+}
+
+/* Links and buttons */
+.links p {
+    margin-top: 20px;
+}
+
+a.btn-link {
+    background-color: #007bff;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+a.btn-link:hover {
+    background-color: #0056b3;
+    transform: translateY(-3px); /* Lift effect on hover */
+}
+

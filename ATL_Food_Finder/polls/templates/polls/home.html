@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlanta Food Finder - Home</title>
+
+    {% load static %}
+    <!-- Linking External CSS -->
+    <link rel="stylesheet" href="{% static 'css/home-styles.css' %}">
+
+    <!-- Import Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <div class="home-container">
+        <h1>Welcome to Atlanta Food Finder!</h1>
+
+        <div class="links">
+            <p><a href="{% url 'search_restaurants' %}">Search for restaurants in Atlanta</a></p>
+        </div>
+    </div>
+</body>
+</html>
