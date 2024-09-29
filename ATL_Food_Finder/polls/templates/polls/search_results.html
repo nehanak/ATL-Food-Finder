@@ -184,6 +184,10 @@ h1 {
         <div class="search-bar">
             <form id="restaurant-search-form">
                 <div>
+                    <label for="name">Restaurant Name: </label>
+                    <input type="text" name="name" id="name" placeholder="Enter restaurant name">
+                </div>
+                <div>
                     <label for="cuisine">Cuisine: </label>
                     <select name="cuisine" id="cuisine">
                         <option value="">Any</option>
@@ -282,6 +286,7 @@ h1 {
         }
 
         function searchRestaurants(location) {
+            const name = document.querySelector('#name').value.toLowerCase();
             const cuisine = document.querySelector('#cuisine').value;
             const rating = document.querySelector('#rating').value;
             const price = document.querySelector('#price').value;
@@ -310,6 +315,10 @@ h1 {
 
                         // Check if within specified distance
                         if (actualDistance > distance) {
+                            return false;
+                        }
+                         // Filter by name
+                         if (name && !place.name.toLowerCase().includes(name)) {
                             return false;
                         }
 
