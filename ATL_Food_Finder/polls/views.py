@@ -27,13 +27,38 @@ def home(request):
 
 def map_view(request):
     query = request.GET.get('q', '')
+    cuisine = request.GET.get('cuisine', '')
+    rating = request.GET.get('rating', '')
+    price = request.GET.get('price', '')
+    distance = int(request.GET.get('distance', 10))  # Default distance
+
+    # Start with all restaurants
+    restaurants = Restaurant.objects.all()
+
+    # Filter by name
     if query:
-        restaurants = Restaurant.objects.filter(name__icontains=query)
-    else:
-        restaurants = Restaurant.objects.all()
+        restaurants = restaurants.filter(name__icontains=query)
 
-    return render(request, 'polls/map_view.html', {'query': query, 'restaurants': restaurants})
+    # Filter by cuisine type
+    if cuisine:
+        restaurants = restaurants.filter(cuisine_type__icontains=cuisine)
 
+    # Filter by rating (assuming you have a rating field)
+    if rating:
+        restaurants = restaurants.filter(rating__gte=int(rating))
+
+    # Filter by price level (assuming you have a price_level field)
+    if price:
+        restaurants = restaurants.filter(price_level__lte=int(price))
+
+    return render(request, 'polls/map_view.html', {
+        'query': query,
+        'cuisine': cuisine,
+        'rating': rating,
+        'price': price,
+        'distance': distance,
+        'restaurants': restaurants
+    })
 def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
