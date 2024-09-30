@@ -6,20 +6,174 @@
     <title>Atlanta Food Finder - Home</title>
 
     {% load static %}
-    <!-- Linking External CSS -->
+
     <link rel="stylesheet" href="{% static 'css/home-styles.css' %}">
 
-    <!-- Import Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        /* Hero Section as a Top Banner */
+.hero {
+    width: 100%;
+    background-color: #007bff; /* Solid blue background */
+    color: white;
+    text-align: center;
+    padding: 40px 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: white;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.hero .search-button {
+    background-color: white;
+    color: #007bff;
+    padding: 12px 24px;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.hero .search-button:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+/* Container for the two side-by-side sections */
+.container {
+    display: flex;
+    justify-content: space-between;
+    width: calc(100% - 40px); /* Full width minus 20px margin on each side */
+    margin: 40px 20px; /* 20px margin on the sides */
+    gap: 20px;
+}
+
+/* Left Side - Welcome Section */
+.left-side {
+    flex: 1;
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    min-height: 300px;
+}
+
+.left-side h2 {
+    font-size: 2rem;
+    color: #007bff;
+    margin-bottom: 20px;
+}
+.left-side p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: #333;
+}
+
+/* Right Side - Favorites Section */
+.right-side {
+    flex: 1;
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Aligns the content to the top */
+}
+
+.favorites h2 {
+    font-size: 2rem;
+    color: #007bff;
+    margin-bottom: 20px;
+}
+
+.favorites p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: #333;
+}
+
+/* Media queries for smaller screens */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .left-side,
+    .right-side {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 20px;
+    }
+
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .hero .search-button {
+        font-size: 1rem;
+    }
+}
+
+    </style>
 </head>
 <body>
-    <div class="home-container">
-        <h1>Welcome to Atlanta Food Finder!</h1>
 
-        <div class="links">
-            <p><a href="{% url 'search_restaurants' %}">Search for restaurants in Atlanta</a></p>
+    <div class="hero">
+        <h1>Welcome to Atlanta Food Finder!</h1>
+        <p>Find Atlanta’s top restaurants and experience the city's vibrant food scene!</p>
+        <a class="search-button" href="{% url 'search_restaurants' %}">Search Restaurants</a>
+    </div>
+
+    <div class="container">
+        <div class="left-side">
+            <h2>Explore Atlanta’s Best Restaurants</h2>
+            <p>Find the perfect spot in Atlanta based on your preferences. Whether you're in the mood for a specific cuisine, searching for top-rated places, or need something within your budget, we've got you covered. Filter by cuisine, rating, price, or distance, and save your favorites for easy access.
+                Start your search now and uncover your next great meal!.</p>
+        </div>
+
+        <div class="right-side favorites">
+            <h2>Favorites</h2>
+            <p>To add a favorite to your account, please add some through the <a href="{% url 'search_restaurants' %}" style="color: #007bff;">search page</a>. Your favorite restaurants will be listed here once you start adding them.</p>
         </div>
     </div>
+
 </body>
 </html>
+
+
