@@ -4,6 +4,10 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from .models import Restaurant
 from django.db.models import Q
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib import messages
+from .forms import LoginForm, RegisterForm
 
 def search_restaurants(request):
     query = request.GET.get('q', '')  # Default to empty string if no query
@@ -55,3 +59,30 @@ def map_view(request):
         'distance': distance,
         'restaurants': restaurants
     })
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home/')
+            else:
+                messages.error(request, 'Invalid username or password.')
+    else:
+        form = LoginForm()
+    return render(request, 'login.html', {'form': form})
+def register_view(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'You now have an account!.')
+            return redirect('login')
+    else:
+        form = RegisterForm()
+    return render(request, 'register.html', {'form': form})
+def home_view(request):
+    return render(request, 'polls/home.html')

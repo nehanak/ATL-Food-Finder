@@ -17,9 +17,14 @@ Including another URLconf
 from django.urls import path
 from . import views
 from .views import map_view
+from django.contrib.auth import views as auth_views
+from .views import login_view, register_view, home_view
 
 urlpatterns = [
     path('', views.home, name='home'),
     path('search/', views.search_restaurants, name='search_restaurants'),
     path('map/', map_view, name='map_view'),
+    path('login/', auth_views.LoginView.as_view(template_name='polls/login.html'), name='login'),
+    path('register/', register_view, name='register'),
+    path('home/', home_view, name='home'),
 ]
