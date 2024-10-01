@@ -381,110 +381,125 @@ h1 {
         }
 
         function createMarker(place) {
-            const marker = new google.maps.Marker({
-                map: map,
-                position: place.geometry.location,
-            });
+    const marker = new google.maps.Marker({
+        map: map,
+        position: place.geometry.location,
+    });
 
-            google.maps.event.addListener(marker, 'click', () => {
-                const detailsRequest = {
-                    placeId: place.place_id,
-                    fields: ['place_id', 'name', 'formatted_address', 'international_phone_number', 'formatted_phone_number', 'opening_hours', 'photos', 'rating', 'reviews', 'website', 'types']
-                };
+    google.maps.event.addListener(marker, 'click', () => {
+        const detailsRequest = {
+            placeId: place.place_id,
+            fields: ['place_id', 'name', 'formatted_address', 'international_phone_number', 'formatted_phone_number', 'opening_hours', 'photos', 'rating', 'reviews', 'website', 'types']
+        };
 
-                const service = new google.maps.places.PlacesService(map);
-                service.getDetails(detailsRequest, (placeDetails, status) => {
-                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+        const service = new google.maps.places.PlacesService(map);
+        service.getDetails(detailsRequest, (placeDetails, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
 
-                        const cuisine = document.getElementById('cuisine').value;
-                        const formattedCuisine = cuisine.replace('_restaurant', '')
-                            .replace('_', ' ')
-                            .split(' ')
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                            .join(' ');
+                const cuisine = document.getElementById('cuisine').value;
+                const formattedCuisine = cuisine.replace('_restaurant', '')
+                    .replace('_', ' ')
+                    .split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
 
-                        const rating = placeDetails.rating ? `<p><strong>Rating:</strong> ${placeDetails.rating} ⭐</p>` : '<p><strong>Rating:</strong> Not available</p>';
+                const rating = placeDetails.rating ? `<p><strong>Rating:</strong> ${placeDetails.rating} ⭐</p>` : '<p><strong>Rating:</strong> Not available</p>';
 
-                        const reviewsContent = placeDetails.reviews ? placeDetails.reviews.slice(0, 3).map(review => `
-                            <li><strong>${review.author_name}</strong>: ${review.text} <em>(Rating: ${review.rating})</em></li>
-                        `).join('') : '<li>No reviews available.</li>';
+                const reviewsContent = placeDetails.reviews ? placeDetails.reviews.slice(0, 3).map(review => `
+                    <li><strong>${review.author_name}</strong>: ${review.text} <em>(Rating: ${review.rating})</em></li>
+                `).join('') : '<li>No reviews available.</li>';
 
-                        const content = `
-                            <div style="max-width: 300px; overflow-wrap: break-word;">
-                                ${placeDetails.photos ? `<img src="${placeDetails.photos[0].getUrl()}" alt="${placeDetails.name}" style="width: 100%; max-height: 200px; object-fit: cover;">` : ''}
-                                <h3>${placeDetails.name}</h3>
-                                <p><strong>Address:</strong> ${placeDetails.formatted_address}</p>
-                                <p><strong>Phone:</strong> ${placeDetails.international_phone_number || placeDetails.formatted_phone_number || 'N/A'}</p>
-                                <p><strong>Cuisine Type:</strong> ${formattedCuisine}</p>
-                                <p><strong>Website:</strong> ${placeDetails.website ? `<a href="${placeDetails.website}" target="_blank">${placeDetails.website}</a>` : 'Website Not Found'}</p>
-                                ${rating}
-                                <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                                    <button id="toggle-reviews-btn" 
-                                            style="flex-grow: 1; background-color: #007BFF; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
-                                        View Reviews
-                                    </button>
-                                    <button id="add-favorites-btn-${placeDetails.place_id}"
-                                            data-place-id="${placeDetails.place_id}"
-                                            style="flex-grow: 1; background-color: #FFA500; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
-                                        Add to Favorites
-                                    </button>
-                                    <button id="get-directions-btn"
-                                            style="flex-grow: 1; background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">
-                                        Get Directions
-                                    </button>
-                                </div>
-                                <ul id="reviews-list" style="display: none; margin-top: 10px;">
-                                    ${reviewsContent}
-                                </ul>
-                            </div>
-                        `;
+                const content = `
+                    <div style="max-width: 300px; overflow-wrap: break-word;">
+                        ${placeDetails.photos ? `<img src="${placeDetails.photos[0].getUrl()}" alt="${placeDetails.name}" style="width: 100%; max-height: 200px; object-fit: cover;">` : ''}
+                        <h3>${placeDetails.name}</h3>
+                        <p><strong>Address:</strong> ${placeDetails.formatted_address}</p>
+                        <p><strong>Phone:</strong> ${placeDetails.international_phone_number || placeDetails.formatted_phone_number || 'N/A'}</p>
+                        <p><strong>Cuisine Type:</strong> ${formattedCuisine}</p>
+                        <p><strong>Website:</strong> ${placeDetails.website ? `<a href="${placeDetails.website}" target="_blank">${placeDetails.website}</a>` : 'Website Not Found'}</p>
+                        ${rating}
+                        <style>
+                            .custom-button {
+                                flex-grow: 1;
+                                background-color: #007BFF;
+                                color: white;
+                                padding: 10px 15px;
+                                border: none;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                margin-right: 10px;
+                                transition: background-color 0.3s ease;
+                            }
+                            .custom-button:hover {
+                                background-color: #0056b3;
+                            }
+                            .custom-favorites {
+                                background-color: #FFA500;
+                            }
+                            .custom-favorites:hover {
+                                background-color: #cc8400;
+                            }
+                            .custom-directions {
+                                background-color: #28a745;
+                            }
+                            .custom-directions:hover {
+                                background-color: #1e7e34;
+                            }
+                        </style>
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                            <button id="toggle-reviews-btn" class="custom-button">View Reviews</button>
+                            <button id="add-favorites-btn-${placeDetails.place_id}" class="custom-button custom-favorites" data-place-id="${placeDetails.place_id}">
+                                Add to Favorites
+                            </button>
+                            <button id="get-directions-btn" class="custom-button custom-directions">
+                                Get Directions
+                            </button>
+                        </div>
+                        <ul id="reviews-list" style="display: none; margin-top: 10px;">
+                            ${reviewsContent}
+                        </ul>
+                    </div>
+                `;
 
-                        google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
-                            const addFavoritesButton = document.getElementById(`add-favorites-btn-${placeDetails.place_id}`);
-                            const getDirectionsButton = document.getElementById('get-directions-btn');
-                            addFavoritesButton.addEventListener('click', () => {
-                                addRestaurantToFavoritesAndRedirect(placeDetails);  // Pass placeDetails object directly
-                            });
+                infoWindow.setContent(content);
+                infoWindow.open(map, marker);
 
-                            getDirectionsButton.addEventListener('click', () => {
-                                window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(placeDetails.formatted_address)}`, '_blank');
-                            });
-                        });
+                google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
+                    const toggleReviewsBtn = document.getElementById('toggle-reviews-btn');
+                    const reviewsList = document.getElementById('reviews-list');
 
-                        infoWindow.setContent(content);
-                        infoWindow.open(map, marker);
+                    toggleReviewsBtn.addEventListener('click', () => {
+                        if (reviewsList.style.display === 'none') {
+                            reviewsList.style.display = 'block';
+                            toggleReviewsBtn.textContent = 'Hide Reviews';
+                        } else {
+                            reviewsList.style.display = 'none';
+                            toggleReviewsBtn.textContent = 'View Reviews';
+                        }
+                    });
 
-                        google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
-                            const toggleReviewsBtn = document.getElementById('toggle-reviews-btn');
-                            const reviewsList = document.getElementById('reviews-list');
+                    const addFavoritesButton = document.getElementById(`add-favorites-btn-${placeDetails.place_id}`);
+                    const getDirectionsButton = document.getElementById('get-directions-btn');
 
-                            toggleReviewsBtn.addEventListener('mouseover', () => {
-                                toggleReviewsBtn.style.backgroundColor = '#0056b3';
-                            });
+                    addFavoritesButton.addEventListener('click', () => {
+                        addRestaurantToFavoritesAndRedirect(placeDetails);
+                    });
 
-                            toggleReviewsBtn.addEventListener('mouseout', () => {
-                                toggleReviewsBtn.style.backgroundColor = '#007BFF';
-                            });
-
-                            toggleReviewsBtn.addEventListener('click', () => {
-                                if (reviewsList.style.display === 'none') {
-                                    reviewsList.style.display = 'block';
-                                    toggleReviewsBtn.textContent = 'Hide Reviews';
-                                } else {
-                                    reviewsList.style.display = 'none';
-                                    toggleReviewsBtn.textContent = 'View Reviews';
-                                }
-                            });
-                        });
-
-                        map.panTo(marker.getPosition());
-                    }
+                    getDirectionsButton.addEventListener('click', () => {
+                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(placeDetails.formatted_address)}`, '_blank');
+                    });
                 });
-            });
 
-            markers.push(marker);
-            return marker;
-        }
+                map.panTo(marker.getPosition());
+            }
+        });
+    });
+
+    markers.push(marker);
+    return marker;
+}
+
+
 
         function addRestaurantToFavoritesAndRedirect(placeDetails) {
             let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
