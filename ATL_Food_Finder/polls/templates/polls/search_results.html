@@ -428,6 +428,11 @@ h1 {
                                             style="flex-grow: 1; background-color: #FFA500; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
                                         Add to Favorites
                                     </button>
+                                    <button id="rem-favorites-btn-${placeDetails.place_id}"
+                                            data-place-id="${placeDetails.place_id}"
+                                            style="flex-grow: 1; background-color: #FFA500; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                                        Remove from Favorites
+                                    </button>
                                     <button id="get-directions-btn"
                                             style="flex-grow: 1; background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">
                                         Get Directions
@@ -441,11 +446,14 @@ h1 {
 
                         google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
                             const addFavoritesButton = document.getElementById(`add-favorites-btn-${placeDetails.place_id}`);
+                            const remFavoritesButton = document.getElementById(`rem-favorites-btn-${placeDetails.place_id}`);
                             const getDirectionsButton = document.getElementById('get-directions-btn');
                             addFavoritesButton.addEventListener('click', () => {
                                 addRestaurantToFavoritesAndRedirect(placeDetails);  // Pass placeDetails object directly
                             });
-
+                            remFavoritesButton.addEventListener('click', () => {
+                                remRestaurantToFavoritesAndRedirect(placeDetails);  // Pass placeDetails object directly
+                            });
                             getDirectionsButton.addEventListener('click', () => {
                                 window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(placeDetails.formatted_address)}`, '_blank');
                             });
@@ -527,6 +535,38 @@ h1 {
                 alert(`${placeDetails.name} is already in your favorites!`);
             }
         }
+        
+        function remRestaurantToFavoritesAndRedirect(placeDetails) {
+            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+            console.log("Current Favorites:", favorites);
+
+            const isAlreadyFavorite = favorites.some(fav => fav.place_id === placeDetails.place_id);
+
+            console.log("Trying to remove place:", placeDetails);
+            console.log("Place ID:", placeDetails.place_id);
+            console.log("Is this place already a favorite?", isAlreadyFavorite);
+
+            if (isAlreadyFavorite) {
+                // Filter out the restaurant to be removed
+                favorites = favorites.filter(fav => fav.place_id !== placeDetails.place_id);
+
+                // Update localStorage
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+
+                console.log("Updated Favorites:", JSON.parse(localStorage.getItem('favorites')));
+
+                alert(`${placeDetails.name} has been removed from your favorites!`);
+
+                // Optionally redirect to a different page or refresh
+                window.location.href = homeUrl;
+            } else {
+                alert(`${placeDetails.name} is not in your favorites!`);
+            }
+        }
+
+
+
 
 
 
