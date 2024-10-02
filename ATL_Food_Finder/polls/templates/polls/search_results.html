@@ -272,6 +272,11 @@ h1 {
                     <input type="number" name="distance" id="distance" placeholder="Enter distance" min="1">
                 </div>
 
+                <div>
+                    <label for="favorite-btn">Favorites </label>
+                    <input type="checkbox" name="favorites" id="favorite-btn" value="Favorites">
+                </div>
+
                 <button type="submit">Search</button>
             </form>
         </div>
@@ -337,6 +342,69 @@ h1 {
             });
         }
 
+        let showingFavorites = false;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            initMap();
+            
+            const favoritesCheckbox = document.getElementById('favorite-btn');
+            if (favoritesCheckbox) {
+                favoritesCheckbox.addEventListener('change', function() {
+                    // Check if the checkbox is checked or not
+                    if (favoritesCheckbox.checked) {
+                        // If checked, show favorites
+                        toggleFavorites();
+                    } else {
+                        // If unchecked, you might want to show all restaurants
+                        clearMarkers(); // Clear current markers
+                        const location = map.getCenter(); // Get current location
+                        searchRestaurants(location); // Re-search to show all restaurants
+                    }
+                });
+            } else {
+                console.error("favorite-btn not found");
+            }
+        });
+
+        function toggleFavorites() {
+            // Get the favorite restaurants from local storage
+            const favoriteRestaurants = JSON.parse(localStorage.getItem('favorites')) || [];
+            
+            // Clear all markers from the map first
+            clearMarkers();
+
+            // Check if favorites exist
+            if (favoriteRestaurants.length === 0) {
+                alert("No favorite restaurants saved!");
+                return;
+            }
+
+            // Loop through the favorite restaurants and place markers on the map
+            favoriteRestaurants.forEach(favorite => {
+                const favoritePosition = {
+                    lat: favorite.lat,
+                    lng: favorite.lng,
+                };
+
+                const marker = new google.maps.Marker({
+                    position: favoritePosition,
+                    map: map,
+                    title: favorite.name
+                });
+
+                // Attach info window to each favorite restaurant marker
+                const infowindow = new google.maps.InfoWindow({
+                    content: `<h5>${favorite.name}</h5><p>${favorite.address}</p>`,
+                });
+
+                marker.addListener("click", function() {
+                    infowindow.open(map, marker);
+                });
+
+                markers.push(marker);
+            });
+        }
+
         function searchRestaurants(location) {
             const name = document.getElementById('name').value;
             const cuisine = document.getElementById('cuisine').value;
@@ -344,6 +412,7 @@ h1 {
             const price = document.querySelector('#price').value;
             const distanceInput = document.querySelector('#distance').value;
             const distance = distanceInput ? distanceInput * 1609.34 : null;
+            const showFavoritesOnly = document.getElementById('favorite-btn').checked;
 
             const request = {
                 location: location,
@@ -358,7 +427,7 @@ h1 {
                     clearMarkers();
                     clearRestaurantList();
 
-                    const filteredResults = results.filter(place => {
+                    let filteredResults = results.filter(place => {
                         let match = true;
 
                         if (rating) {
@@ -371,6 +440,13 @@ h1 {
 
                         return match;
                     });
+
+                    if (showFavoritesOnly) {
+                        const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+                        filteredResults = filteredResults.filter(place => 
+                            favorites.some(fav => fav.place_id === place.place_id)
+                        );
+                    }
 
                     for (let i = 0; i < filteredResults.length; i++) {
                         const marker = createMarker(filteredResults[i]);
@@ -527,8 +603,6 @@ h1 {
                 alert(`${placeDetails.name} is already in your favorites!`);
             }
         }
-
-
 
 
 
