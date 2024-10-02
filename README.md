@@ -37,7 +37,7 @@
 <p>We use <strong>Jira</strong> to track our development progress, manage tasks, and work within the Scrum framework. You can view our project board below:</p>
 
 <ul>
-  <li><a href="#">Jira Board</a> <em>https://atlantafoodfinder.atlassian.net/jira/core/projects/CAFF/board?cloudId=8320be10-cfde-4d62-abac-a5380f2654d8</em></li>
+  <li><a href="https://atlantafoodfinder.atlassian.net/jira/core/projects/CAFF/board?cloudId=8320be10-cfde-4d62-abac-a5380f2654d8" target="_blank">Jira Board</a></li>
 </ul>
 
 <h2>Contributors</h2>
