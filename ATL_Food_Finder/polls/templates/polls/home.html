@@ -16,7 +16,26 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
+        }  
+        .back-arrow {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: white;
+            color: red;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-family: 'Roboto', sans-serif;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+}
+
+.back-arrow:hover {
+    background-color: red;
+    color: white;
+}
 
     body {
         font-family: 'Roboto', sans-serif;
@@ -30,6 +49,7 @@
         width: 100vw;
         height: 100vh;
         overflow: hidden;
+        position: relative;
     }
 
     .container {
@@ -170,6 +190,7 @@
 </head>
 <body>
     <div class="hero">
+        <button class="back-arrow" onclick="goBack()">← Logout </button>
         <h1>Welcome to Atlanta Food Finder!</h1>
         <p>Find Atlanta’s top restaurants and experience the city's vibrant food scene!</p>
         <a class="search-button" href="{% url 'search_restaurants' %}">Search Restaurants</a>
@@ -225,6 +246,9 @@
             });
         }
     }
+    function goBack() {
+            window.history.back();
+        }
 
     window.onload = function() {
         displayFavorites();
