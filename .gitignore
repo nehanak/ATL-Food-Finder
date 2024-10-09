@@ -1,0 +1,19 @@
+# db.sqlite3
+
+# Ignore Python bytecode files
+*.pyc
+__pycache__/
+
+# Ignore virtual environment directories
+.env/
+.venv/
+env/
+venv/
+
+# Ignore IDE-related files
+.idea/
+.vscode/
+
+# Ignore media and static files (optional)
+media/
+static/
