@@ -294,7 +294,7 @@ h1 {
         const homeUrl = "{% url 'home' %}";
 
         function goBack() {
-            window.history.back();
+            window.location.href = homeUrl;
         }
 
         let map;
@@ -346,19 +346,16 @@ h1 {
 
         document.addEventListener("DOMContentLoaded", function() {
             initMap();
-            
+
             const favoritesCheckbox = document.getElementById('favorite-btn');
             if (favoritesCheckbox) {
                 favoritesCheckbox.addEventListener('change', function() {
-                    // Check if the checkbox is checked or not
                     if (favoritesCheckbox.checked) {
-                        // If checked, show favorites
                         toggleFavorites();
                     } else {
-                        // If unchecked, you might want to show all restaurants
-                        clearMarkers(); // Clear current markers
-                        const location = map.getCenter(); // Get current location
-                        searchRestaurants(location); // Re-search to show all restaurants
+                        clearMarkers();
+                        const location = map.getCenter();
+                        searchRestaurants(location);
                     }
                 });
             } else {
@@ -367,41 +364,48 @@ h1 {
         });
 
         function toggleFavorites() {
-            // Get the favorite restaurants from local storage
-            const favoriteRestaurants = JSON.parse(localStorage.getItem('favorites')) || [];
-            
-            // Clear all markers from the map first
-            clearMarkers();
+            console.log("Favorites toggled")
+            fetch('/api/get-favorites/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.favorites.length === 0) {
+                    alert("No favorite restaurants saved!");
+                    return;
+                }
 
-            // Check if favorites exist
-            if (favoriteRestaurants.length === 0) {
-                alert("No favorite restaurants saved!");
-                return;
-            }
+                clearMarkers();
 
-            // Loop through the favorite restaurants and place markers on the map
-            favoriteRestaurants.forEach(favorite => {
-                const favoritePosition = {
-                    lat: favorite.lat,
-                    lng: favorite.lng,
-                };
+                data.favorites.forEach(favorite => {
+                    console.log("Favorite Restaurant:", favorite);
+                    const favoritePosition = {
+                        lat: parseFloat(favorite.latitude),
+                        lng: parseFloat(favorite.longitude)
+                    };
 
-                const marker = new google.maps.Marker({
-                    position: favoritePosition,
-                    map: map,
-                    title: favorite.name
+                    const marker = new google.maps.Marker({
+                        position: favoritePosition,
+                        map: map,
+                        title: favorite.name
+                    });
+
+                    const infowindow = new google.maps.InfoWindow({
+                        content: `<h5>${favorite.name}</h5><p>${favorite.formatted_address}</p>`,
+                    });
+
+                    marker.addListener("click", function() {
+                        infowindow.open(map, marker);
+                    });
+
+                    markers.push(marker);
                 });
-
-                // Attach info window to each favorite restaurant marker
-                const infowindow = new google.maps.InfoWindow({
-                    content: `<h5>${favorite.name}</h5><p>${favorite.address}</p>`,
-                });
-
-                marker.addListener("click", function() {
-                    infowindow.open(map, marker);
-                });
-
-                markers.push(marker);
+            })
+            .catch(error => {
+                console.error('Error fetching favorites:', error);
             });
         }
 
@@ -456,99 +460,84 @@ h1 {
             });
         }
 
-        function createMarker(place) {
-            const marker = new google.maps.Marker({
-                map: map,
-                position: place.geometry.location,
-            });
+function createMarker(place) {
+    // Check if geometry/location exists
+    if (!place.geometry || !place.geometry.location) {
+        console.error('Place has no geometry/location:', place);
+        return null; // Return null if no location is available
+    }
 
-            google.maps.event.addListener(marker, 'click', () => {
-                const detailsRequest = {
-                    placeId: place.place_id,
-                    fields: ['place_id', 'name', 'formatted_address', 'international_phone_number', 'formatted_phone_number', 'opening_hours', 'photos', 'rating', 'reviews', 'website', 'types']
-                };
+    const marker = new google.maps.Marker({
+        map: map,
+        position: place.geometry.location,
+    });
 
-                const service = new google.maps.places.PlacesService(map);
-                service.getDetails(detailsRequest, (placeDetails, status) => {
-                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+    google.maps.event.addListener(marker, 'click', () => {
+        const detailsRequest = {
+            placeId: place.place_id,
+            fields: ['place_id', 'name', 'formatted_address', 'international_phone_number', 'formatted_phone_number', 'opening_hours', 'photos', 'rating', 'reviews', 'website', 'types']
+        };
 
-                        const cuisine = document.getElementById('cuisine').value;
-                        const formattedCuisine = cuisine.replace('_restaurant', '')
-                            .replace('_', ' ')
-                            .split(' ')
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                            .join(' ');
+        const service = new google.maps.places.PlacesService(map);
+        service.getDetails(detailsRequest, (placeDetails, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                // Declare the formattedCuisine properly
+                const cuisine = document.getElementById('cuisine').value;
+                const formattedCuisine = cuisine.replace('_restaurant', '')
+                    .replace('_', ' ')
+                    .split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
 
-                        const rating = placeDetails.rating ? `<p><strong>Rating:</strong> ${placeDetails.rating} ⭐</p>` : '<p><strong>Rating:</strong> Not available</p>';
+                const rating = placeDetails.rating ? `<p><strong>Rating:</strong> ${placeDetails.rating} ⭐</p>` : '<p><strong>Rating:</strong> Not available</p>';
+                const reviewsContent = placeDetails.reviews ? placeDetails.reviews.slice(0, 3).map(review => `
+                    <li><strong>${review.author_name}</strong>: ${review.text} <em>(Rating: ${review.rating})</em></li>
+                `).join('') : '<li>No reviews available.</li>';
 
-                        const reviewsContent = placeDetails.reviews ? placeDetails.reviews.slice(0, 3).map(review => `
-                            <li><strong>${review.author_name}</strong>: ${review.text} <em>(Rating: ${review.rating})</em></li>
-                        `).join('') : '<li>No reviews available.</li>';
+                // Construct content for InfoWindow
+                const content = `
+                    <div style="max-width: 300px; overflow-wrap: break-word;">
+                        ${placeDetails.photos ? `<img src="${placeDetails.photos[0].getUrl()}" alt="${placeDetails.name}" style="width: 100%; max-height: 200px; object-fit: cover;">` : ''}
+                        <h3>${placeDetails.name}</h3>
+                        <p><strong>Address:</strong> ${placeDetails.formatted_address}</p>
+                        <p><strong>Phone:</strong> ${placeDetails.international_phone_number || placeDetails.formatted_phone_number || 'N/A'}</p>
+                        <p><strong>Cuisine Type:</strong> ${formattedCuisine}</p>
+                        <p><strong>Website:</strong> ${placeDetails.website ? `<a href="${placeDetails.website}" target="_blank">${placeDetails.website}</a>` : 'Website Not Found'}</p>
+                        ${rating}
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
 
-                        const content = `
-                            <div style="max-width: 300px; overflow-wrap: break-word;">
-                                ${placeDetails.photos ? `<img src="${placeDetails.photos[0].getUrl()}" alt="${placeDetails.name}" style="width: 100%; max-height: 200px; object-fit: cover;">` : ''}
-                                <h3>${placeDetails.name}</h3>
-                                <p><strong>Address:</strong> ${placeDetails.formatted_address}</p>
-                                <p><strong>Phone:</strong> ${placeDetails.international_phone_number || placeDetails.formatted_phone_number || 'N/A'}</p>
-                                <p><strong>Cuisine Type:</strong> ${formattedCuisine}</p>
-                                <p><strong>Website:</strong> ${placeDetails.website ? `<a href="${placeDetails.website}" target="_blank">${placeDetails.website}</a>` : 'Website Not Found'}</p>
-                                ${rating}
-                                <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                                    <button id="toggle-reviews-btn" 
-                                            style="flex-grow: 1; background-color: #007BFF; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
-                                        View Reviews
-                                    </button>
-                                    <button id="add-favorites-btn-${placeDetails.place_id}"
-                                            data-place-id="${placeDetails.place_id}"
-                                            style="flex-grow: 1; background-color: #FFA500; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
-                                        Add to Favorites
-                                    </button>
-                                    <button id="rem-favorites-btn-${placeDetails.place_id}"
-                                            data-place-id="${placeDetails.place_id}"
-                                            style="flex-grow: 1; background-color: #FFA500; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
-                                        Remove from Favorites
-                                    </button>
-                                    <button id="get-directions-btn"
-                                            style="flex-grow: 1; background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">
-                                        Get Directions
-                                    </button>
-                                </div>
-                                <ul id="reviews-list" style="display: none; margin-top: 10px;">
-                                    ${reviewsContent}
-                                </ul>
-                            </div>
-                        `;
+                        <button id="toggle-reviews-btn" 
+                                style="flex-grow: 1; background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                            View Reviews
+                        </button>
+                            <button id="add-favorites-btn-${placeDetails.place_id}"
+                                    data-place-id="${placeDetails.place_id}"
+                                    style="flex-grow: 1; background-color: #FFA500; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                                Add to Favorites
+                            </button>
+                            <button id="rem-favorites-btn-${placeDetails.place_id}"
+                                    data-place-id="${placeDetails.place_id}"
+                                    style="flex-grow: 1; background-color: #FFA500; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                                Remove from Favorites
+                            </button>
+                            <button id="get-directions-btn" style="background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">
+                                Get Directions
+                            </button>
+                        </div>
+                        <ul id="reviews-list" style="display: none; margin-top: 10px;">
+                            ${reviewsContent}
+                        </ul>
+                    </div>
+                `;
 
-                        google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
-                            const addFavoritesButton = document.getElementById(`add-favorites-btn-${placeDetails.place_id}`);
-                            const remFavoritesButton = document.getElementById(`rem-favorites-btn-${placeDetails.place_id}`);
-                            const getDirectionsButton = document.getElementById('get-directions-btn');
-                            addFavoritesButton.addEventListener('click', () => {
-                                addRestaurantToFavoritesAndRedirect(placeDetails);  // Pass placeDetails object directly
-                            });
-                            remFavoritesButton.addEventListener('click', () => {
-                                remRestaurantToFavoritesAndRedirect(placeDetails);  // Pass placeDetails object directly
-                            });
-                            getDirectionsButton.addEventListener('click', () => {
-                                window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(placeDetails.formatted_address)}`, '_blank');
-                            });
-                        });
+                infoWindow.setContent(content);
+                infoWindow.open(map, marker);
 
-                        infoWindow.setContent(content);
-                        infoWindow.open(map, marker);
+                // Add event listener after content has been set
+                google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
 
-                        google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
-                            const toggleReviewsBtn = document.getElementById('toggle-reviews-btn');
+                    const toggleReviewsBtn = document.getElementById('toggle-reviews-btn');
                             const reviewsList = document.getElementById('reviews-list');
-
-                            toggleReviewsBtn.addEventListener('mouseover', () => {
-                                toggleReviewsBtn.style.backgroundColor = '#0056b3';
-                            });
-
-                            toggleReviewsBtn.addEventListener('mouseout', () => {
-                                toggleReviewsBtn.style.backgroundColor = '#007BFF';
-                            });
 
                             toggleReviewsBtn.addEventListener('click', () => {
                                 if (reviewsList.style.display === 'none') {
@@ -559,113 +548,135 @@ h1 {
                                     toggleReviewsBtn.textContent = 'View Reviews';
                                 }
                             });
-                        });
 
-                        map.panTo(marker.getPosition());
+                    const addFavoritesButton = document.getElementById(`add-favorites-btn-${placeDetails.place_id}`);
+                    if (addFavoritesButton) {
+                        const details = {
+                            place_id: placeDetails.place_id,
+                            name: placeDetails.name,
+                            formatted_address: placeDetails.formatted_address,
+                            phone_number: placeDetails.international_phone_number || placeDetails.formatted_phone_number,
+                            website: placeDetails.website,
+                            cuisine_type: formattedCuisine,
+                            photo_url: placeDetails.photos ? placeDetails.photos[0].getUrl() : ''
+                        };
+
+                        addFavoritesButton.addEventListener('click', () => {
+                            addRestaurantToFavorites(details);
+                        });
+                    }
+
+                    const getDirectionsButton = document.getElementById('get-directions-btn');
+                    getDirectionsButton.addEventListener('click', () => {
+                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(placeDetails.formatted_address)}`, '_blank');
+                    });
+
+                    const remFavoritesButton = document.getElementById(`rem-favorites-btn-${placeDetails.place_id}`);
+                    if (remFavoritesButton) {
+                        remFavoritesButton.addEventListener('click', () => {
+                            removeRestaurantFromFavorites(placeDetails.place_id, placeDetails.name);
+                        });
                     }
                 });
-            });
 
-            markers.push(marker);
-            return marker;
-        }
-
-        function addRestaurantToFavoritesAndRedirect(placeDetails) {
-            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-
-            console.log("Current Favorites:", favorites);
-
-            const isAlreadyFavorite = favorites.some(fav => fav.place_id === placeDetails.place_id);
-
-            console.log("Trying to add place:", placeDetails);
-            console.log("Place ID:", placeDetails.place_id);
-            console.log("Is this place already a favorite?", isAlreadyFavorite);
-
-            if (!isAlreadyFavorite) {
-                const formattedCuisine = document.getElementById('cuisine').value
-                    .replace('_restaurant', '')
-                    .replace('_', ' ')
-                    .split(' ')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-
-                favorites.push({
-                    place_id: placeDetails.place_id,
-                    name: placeDetails.name,
-                    formatted_address: placeDetails.formatted_address,
-                    phone_number: placeDetails.international_phone_number || placeDetails.formatted_phone_number,
-                    website: placeDetails.website,
-                    cuisine_type: formattedCuisine,
-                    photo_url: placeDetails.photos ? placeDetails.photos[0].getUrl() : ''
-                });
-
-                localStorage.setItem('favorites', JSON.stringify(favorites));
-
-                console.log("Updated Favorites:", JSON.parse(localStorage.getItem('favorites')));
-
-                alert(`${placeDetails.name} has been added to your favorites!`);
-
-                window.location.href = homeUrl;
-
-            } else {
-                alert(`${placeDetails.name} is already in your favorites!`);
+                map.panTo(marker.getPosition());
             }
+        });
+    });
+
+    return marker; // Ensure the marker is returned
+}
+
+
+        function addRestaurantToFavorites(placeDetails) {
+            fetch('/add-to-favorites/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(placeDetails)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`${placeDetails.name} has been added to your favorites!`);
+                    console.log('Favorite restaurants:', favorites);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         }
+
+        function removeRestaurantFromFavorites(placeId, name) {
+    fetch('/remove-from-favorites/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')  // Ensure CSRF token is properly set
+        },
+        body: JSON.stringify({ place_id: placeId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`${name} has been removed from your favorites!`);
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while trying to remove the restaurant from favorites.');
+    });
+}
         
-        function remRestaurantToFavoritesAndRedirect(placeDetails) {
-            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-
-            console.log("Current Favorites:", favorites);
-
-            const isAlreadyFavorite = favorites.some(fav => fav.place_id === placeDetails.place_id);
-
-            console.log("Trying to remove place:", placeDetails);
-            console.log("Place ID:", placeDetails.place_id);
-            console.log("Is this place already a favorite?", isAlreadyFavorite);
-
-            if (isAlreadyFavorite) {
-                // Filter out the restaurant to be removed
-                favorites = favorites.filter(fav => fav.place_id !== placeDetails.place_id);
-
-                // Update localStorage
-                localStorage.setItem('favorites', JSON.stringify(favorites));
-
-                console.log("Updated Favorites:", JSON.parse(localStorage.getItem('favorites')));
-
-                alert(`${placeDetails.name} has been removed from your favorites!`);
-
-                // Optionally redirect to a different page or refresh
-                window.location.href = homeUrl;
-            } else {
-                alert(`${placeDetails.name} is not in your favorites!`);
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
         }
+    }
+    return cookieValue;
+}
 
+function addRestaurantToList(place, marker) {
+    const list = document.getElementById('restaurant-list');
 
+    const item = document.createElement('div');
+    item.classList.add('restaurant-item');
+    item.style.cursor = 'pointer';
 
+    item.innerHTML = `
+        <h3>${place.name}</h3>
+        <p>Address: ${place.vicinity}</p>
+        <p>Rating: ${place.rating || 'N/A'} ⭐</p>
+        <p>Price Level: ${'$'.repeat(place.price_level || 0)}</p>
+    `;
 
-
-
-        function addRestaurantToList(place, marker) {
-            const list = document.getElementById('restaurant-list');
-
-            const item = document.createElement('div');
-            item.classList.add('restaurant-item');
-            item.style.cursor = 'pointer';
-
-            item.innerHTML = `
-                <h3>${place.name}</h3>
-                <p>Address: ${place.vicinity}</p>
-                <p>Rating: ${place.rating || 'N/A'} ⭐</p>
-                <p>Price Level: ${'$'.repeat(place.price_level || 0)}</p>
-            `;
-
-            item.addEventListener('click', () => {
-                google.maps.event.trigger(marker, 'click');
-            });
-
-            list.appendChild(item);
+    item.addEventListener('click', () => {
+        console.log("Clicked!", marker);  // Check if marker is passed correctly
+        if (marker) {
+            map.setCenter(marker.getPosition());  // Center the map on the marker
+            map.setZoom(15);  // Optional: zoom in on the marker
+            google.maps.event.trigger(marker, 'click');  // Open marker's InfoWindow
+        } else {
+            console.error("Marker is undefined for this place.");
         }
+    });
+
+    list.appendChild(item);
+}
+
 
         function clearMarkers() {
             markers.forEach(marker => marker.setMap(null));
@@ -679,3 +690,6 @@ h1 {
     </script>
 </body>
 </html>
+
+
+

@@ -27,5 +27,12 @@
             </form>
         </div>
     </div>
+
+    <script>
+        // Check if the user is authenticated and log it to the console
+        const isLoggedIn = "{{ request.user.is_authenticated|yesno:'true,false' }}";
+        console.log("Is user logged in?", isLoggedIn);
+    </script>
 </body>
 </html>
+
