@@ -15,6 +15,10 @@ from django.contrib.auth.decorators import login_required
 from .models import Favorite
 import json
 
+from django.core.serializers.json import DjangoJSONEncoder
+from django.contrib.auth.decorators import login_required
+import logging
+
 def search_restaurants(request):
     query = request.GET.get('q', '')  # Default to empty string if no query
     restaurants = Restaurant.objects.all()
@@ -80,6 +84,7 @@ def login_view(request):
     else:
         form = LoginForm()
     return render(request, 'login.html', {'form': form})
+
 def register_view(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
@@ -90,6 +95,7 @@ def register_view(request):
     else:
         form = RegisterForm()
     return render(request, 'register.html', {'form': form})
+
 @login_required(login_url='/login/')
 def home_view(request):
     favorites = Favorite.objects.filter(user=request.user)
@@ -137,21 +143,28 @@ def add_to_favorites(request):
     return JsonResponse({'message': 'Invalid request method.'}, status=405)
 
 
+logger = logging.getLogger(__name__)
+
+@login_required
 def get_favorites(request):
-    favorites = Favorite.objects.filter(user=request.user)
-
-    # Serialize the favorite objects into JSON format
-    favorites_data = [{
-        'place_id': fav.place_id,
-        'name': fav.name,
-        'formatted_address': fav.formatted_address,
-        'phone_number': fav.phone_number,
-        'website': fav.website,
-        'cuisine_type': fav.cuisine_type,
-        'photo_url': fav.photo_url
-    } for fav in favorites]
-
-    return JsonResponse({'favorites': favorites_data})
+    try:
+        favorites = Favorite.objects.filter(user=request.user)
+        favorites_data = [{
+            'place_id': fav.place_id,
+            'name': fav.name,
+            'formatted_address': fav.formatted_address,
+            'phone_number': fav.phone_number,
+            'website': fav.website,
+            'cuisine_type': fav.cuisine_type,
+            'photo_url': fav.photo_url,
+            'latitude': float(fav.latitude) if fav.latitude else None,
+            'longitude': float(fav.longitude) if fav.longitude else None
+        } for fav in favorites]
+        
+        return JsonResponse({'favorites': favorites_data}, encoder=DjangoJSONEncoder)
+    except Exception as e:
+        logger.error(f"Error in get_favorites: {str(e)}")
+        return JsonResponse({'error': 'An error occurred while fetching favorites'}, status=500)
 
 @login_required(login_url='/login/')
 @csrf_exempt
