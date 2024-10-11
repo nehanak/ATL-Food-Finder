@@ -271,11 +271,12 @@ h1 {
                     <label for="distance">Distance (miles): </label>
                     <input type="number" name="distance" id="distance" placeholder="Enter distance" min="1">
                 </div>
-
+                <!--
                 <div>
                     <label for="favorite-btn">Favorites </label>
                     <input type="checkbox" name="favorites" id="favorite-btn" value="Favorites">
                 </div>
+            -->
 
                 <button type="submit">Search</button>
             </form>
@@ -342,11 +343,11 @@ h1 {
             });
         }
 
-        let showingFavorites = false;
+        //let showingFavorites = false;
 
         document.addEventListener("DOMContentLoaded", function() {
             initMap();
-
+            /**
             const favoritesCheckbox = document.getElementById('favorite-btn');
             if (favoritesCheckbox) {
                 favoritesCheckbox.addEventListener('change', function() {
@@ -361,8 +362,9 @@ h1 {
             } else {
                 console.error("favorite-btn not found");
             }
+            */
         });
-
+        /*
         function toggleFavorites() {
             console.log("Favorites toggled")
             fetch('/api/get-favorites/', {
@@ -408,6 +410,7 @@ h1 {
                 console.error('Error fetching favorites:', error);
             });
         }
+        */
 
         function searchRestaurants(location) {
             const name = document.getElementById('name').value;
@@ -416,7 +419,7 @@ h1 {
             const price = document.querySelector('#price').value;
             const distanceInput = document.querySelector('#distance').value;
             const distance = distanceInput ? distanceInput * 1609.34 : null;
-            const showFavoritesOnly = document.getElementById('favorite-btn').checked;
+            //const showFavoritesOnly = document.getElementById('favorite-btn').checked;
 
             const request = {
                 location: location,
@@ -444,17 +447,19 @@ h1 {
 
                         return match;
                     });
-
+                    /*
                     if (showFavoritesOnly) {
                         const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
                         filteredResults = filteredResults.filter(place => 
                             favorites.some(fav => fav.place_id === place.place_id)
                         );
-                    }
+                    } */
 
                     for (let i = 0; i < filteredResults.length; i++) {
                         const marker = createMarker(filteredResults[i]);
-                        addRestaurantToList(filteredResults[i], marker);
+                        if (marker) {
+                            addRestaurantToList(filteredResults[i], marker);
+                        }
                     }
                 }
             });
