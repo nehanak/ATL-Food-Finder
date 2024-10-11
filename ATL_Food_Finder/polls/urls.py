@@ -23,7 +23,12 @@ urlpatterns = [
     path('search/', views.search_restaurants, name='search_restaurants'),
     path('map/', views.map_view, name='map_view'),
     path('login/', auth_views.LoginView.as_view(template_name='polls/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(template_name='polls/login.html'), name='logout'),
     # You can keep this to have `/login/` as a URL too
     path('register/', views.register_view, name='register'),
     path('home/', views.home_view, name='home'),
+    path('add-to-favorites/', views.add_to_favorites, name='add_to_favorites'),
+    path('api/get-favorites/', views.get_favorites, name='get_favorites'),
+    path('remove-from-favorites/', views.remove_from_favorites, name='remove_from_favorites'),
+
 ]
